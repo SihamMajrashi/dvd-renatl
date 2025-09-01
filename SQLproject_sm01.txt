@@ -1,0 +1,75 @@
+Question 1
+write a query to capture the customer name, month and year of payment, and total payment amount for each month by these top 10 paying customers.
+ 
+Solution:
+
+SELECT DATE_TRUNC('month', p.payment_date) pay_month,
+	c.first_name || ' ' || c.last_name AS full_name, 
+	COUNT(p.amount) AS pay_countpermon,
+	SUM(p.amount) AS pay_amount
+FROM customer c
+JOIN payment  p
+ON p.customer_id = c.customer_id
+WHERE c.first_name || ' ' || c.last_name IN
+       (SELECT sub.full_name
+        FROM
+            (SELECT c.first_name || ' ' || c.last_name AS full_name, 
+                    SUM(p.amount) as amount_total
+             FROM customer c
+             JOIN payment p
+             ON p.customer_id = c.customer_id
+             GROUP BY 1	
+             ORDER BY 2 DESC
+             LIMIT 10) sub) 
+        AND (p.payment_date BETWEEN '2006-12-31' AND '2008-01-01')
+GROUP BY 1,2
+ORDER BY 2;
+
+ ----------------------------------------------
+Question 2 
+Provide a table contain films categories and how many films belong to each category.
+Solution:
+
+SELECT  c.name category, 
+        COUNT(f.film_id) number_of_films  
+FROM category c
+JOIN film_category fc
+ON c.category_id = fc.category_id
+JOIN film f
+ON f.film_id = fc.film_id
+GROUP BY 1
+ORDER BY 1;
+
+-----------------------------------------------
+Question 3
+Write a query to compare the revenue of each store, by comparing the total amount of payment and numbers of DVD rentals associated with it .
+
+Solution:
+
+WITH pay as(
+SELECT sr.store_id, 
+       COUNT(r.rental_id)OVER(PARTITION BY sr.store_id) as rentals 
+FROM staff f
+JOIN rental r
+ON r.staff_id = f.staff_id
+JOIN store sr
+ON sr.store_id = f.store_id
+          )
+       SELECT store_id,rentals
+       FROM pay ;
+
+----------------------------------------------
+Question 4
+Write a query to find the five most rented films and how many times they've been rented. 
+Solution:
+
+SELECT f.title film,  
+      COUNT(r.rental_id) rented_times
+FROM film f
+JOIN inventory i
+ON f.film_id = i.film_id
+JOIN rental r
+ON r.inventory_id= i.inventory_id
+GROUP By 1
+ORDER BY 2 DESC
+LIMIT 5;
